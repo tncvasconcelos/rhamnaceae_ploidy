@@ -3,12 +3,14 @@ rm(list=ls())
 
 source("00_utility_functions.R")
 
-phy <- read.tree("01-Pomaderris-example-spatial/Rham.POM.nu.30.no.Sieg.tree")
+phy <- read.tree("01-Pomaderris-example-spatial/RHAM2.215t.TreePL.LABELED.tree")
+plot(phy, show.tip.label = F)
+f = 0.86 #?
+phy <- multi2di(phy)
 
 max.param = max(4, round(ape::Ntip(phy)/10))
 possible.combos = generateMiSSEGreedyCombinations(max.param=max.param, vary.both=TRUE, fixed.eps.tries=NA)
 
-f = 0.3 #?
 save.file = "Pomaderris_run.Rsave"
 stop.deltaAICc = 2
 n.cores = 4
@@ -30,7 +32,7 @@ model.recons <- as.list(1:length(model.set_pruned))
 for (model_index in 1:length(model.set_pruned)) {
   nturnover <- length(unique(model.set_pruned[[model_index]]$turnover))
   neps <- length(unique(model.set_pruned[[model_index]]$eps))
-  model.recons[[model_index]] <- hisse::MarginReconMiSSE(phy = model.set_pruned[[model_index]]$phy, f = 0.45, hidden.states = max(c(nturnover, neps)), 
+  model.recons[[model_index]] <- hisse::MarginReconMiSSE(phy = model.set_pruned[[model_index]]$phy, f = 0.86, hidden.states = max(c(nturnover, neps)), 
                                                          pars = model.set_pruned[[model_index]]$solution, fixed.eps=model.set_pruned$fixed.eps , 
                                                          AIC = model.set_pruned[[model_index]]$AIC, root.type = "madfitz",n.cores=n.cores)   
 }
@@ -47,11 +49,18 @@ save(model.set_pruned,
      possible.combos,
      file="misse_results/Pomaderris_results.Rsave")
 
+#load("misse_results/Pomaderris_results.Rsave")
 #########################################################################
 # You can also visualize the rates evolving in the tree with the following command, 
 # though rates through time *should not* be interpreted literally. The painting
 # is just to get a "feeling" for the model.
-pdf("misse_results/Pomaderris_misse.pdf", width=6, height=9)
-painted.tree <- hisse::plot.misse.states(x = model.recons, 
-                                         rate.param = "net.div", type = "phylo", show.tip.label = T, fsize=0.5) 
+
+pdf("misse_results/Pomaderris_misse.pdf", width=6, height=15)
+rates <- c("net.div","speciation","turnover","extinction","extinct.fraction")
+for(rate_index in 1:length(rates)){
+  painted.tree <- hisse::plot.misse.states(x = model.recons, 
+                                           rate.param = rates[rate_index], type = "phylo", show.tip.label = T, fsize=0.5)   
+  title(main=rates[rate_index])
+}
+
 dev.off()
