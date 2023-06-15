@@ -9,5 +9,5 @@ all_dist_points <- subset(all_dist_points, !is.na(all_dist_points$Longitude))
 all_dist_points <- subset(all_dist_points, !is.na(all_dist_points$Latitude))
 
 test_run <- GetRanges(points=all_dist_points, species="Species", lat="Latitude", lon="Longitude", threshold=0.5, buffer=25, res=10)
-#saveRDS(test_run, file="distribution_models.Rdata")
+saveRDS(test_run, file="distribution_models.Rdata")
 
