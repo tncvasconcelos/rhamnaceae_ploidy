@@ -56,7 +56,7 @@ save(model.set_pruned,
 # is just to get a "feeling" for the model.
 
 pdf("misse_results/Pomaderris_misse.pdf", width=6, height=15)
-rates <- c("net.div","speciation","turnover","extinction","extinct.fraction")
+rates <- c("net.div","speciation","turnover","extinction","extinction.fraction")
 for(rate_index in 1:length(rates)){
   painted.tree <- hisse::plot.misse.states(x = model.recons, 
                                            rate.param = rates[rate_index], type = "phylo", show.tip.label = T, fsize=0.5)   

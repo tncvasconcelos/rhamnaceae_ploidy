@@ -1,5 +1,7 @@
 setwd("~/Desktop/rhamnaceae_ploidy/")
 #rm(list=ls())
+library(maptools)
+data("wrld_simpl")
 
 # Load models again
 test_run <- readRDS("distribution_models.Rdata")
@@ -46,3 +48,33 @@ pdf("netdiv_map.pdf")
 raster::plot(netdiv_map)
 dev.off()
 
+######
+# netdiv without Pomaderris
+
+ranges_woPomaderris <- subset(ranges ,!grepl("Pomaderris", names(ranges)))
+tmp.raster.list <- list()
+buffer_mask=10
+for (i in 1:length(ranges_woPomaderris)) {
+  one_label <- names(ranges_woPomaderris)[i]
+  r1 <- ranges_woPomaderris[[i]]
+  r1 <- rasterToPoints(r1)
+  if(nrow(r1)>0) {
+    circle_around_point <- dismo::circles(r1, d=buffer_mask*1000, lonlat=TRUE)
+    circle_around_point <- polygons(circle_around_point)
+    r1 <- rasterize(circle_around_point, template.map)
+    r1 <- raster::resample(r1, template.map)
+    r1[is.na(r1)] <- 0
+    r1[which(r1[]==1)] <- tip_rates$net.div[tip_rates$taxon==one_label]
+    r0 <- raster::mask(r1, template.map)
+    r0[is.na(template.map)] <- NA
+    tmp.raster.list[[i]] <- r0
+    print(i)    
+  }
+}
+tmp.raster.list[which(unlist(lapply(tmp.raster.list, is.null)))] <- NULL
+netdiv_map <- raster::calc(raster::stack(tmp.raster.list), mean)
+saveRDS(netdiv_map, file="netdiv_map_woPomaderris.Rdata")
+
+pdf("sp_rich_maps/netdiv_map_woPomaderris2.pdf")
+raster::plot(netdiv_map)
+dev.off()

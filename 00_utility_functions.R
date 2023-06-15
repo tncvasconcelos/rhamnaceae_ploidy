@@ -317,10 +317,11 @@ GetSpRichness <- function (list_of_ranges) {
     r1[is.na(r1)] <- 0
     tmp.raster.list[[i]] <- raster::mask(r1, template.map)
     print(i)
+    sprichness_map <- raster::calc(raster::stack(tmp.raster.list), sum)
   }
   names(tmp.raster.list) <- names(ranges)
   sprichness_map <- raster::calc(raster::stack(tmp.raster.list), sum)
-  raster::plot(sprichness_map)
+  # raster::plot(sprichness_map)
   #saveRDS(tmp.raster.list, file=paste0("~/Desktop/MiSSEgradient/MiSSEGradient/regressions_plan/Data/1_rate_rasters/all_species_stack.Rdata"))
   return(sprichness_map)
 }
