@@ -62,27 +62,26 @@ Bg_cHull <- function (thinned_points, width=2.5) {
 #' @param buffer buffer
 #' @param res res
 GetOneRange <- function(points_for_range, threshold, buffer, res, predictors) {
-  #cat("Thinning points...")
+  cat("Thinning points...")
    if(nrow(points_for_range) > 2) {
      thinned_points <- Thinning_internal(points_for_range)
    } else { thinned_points = points_for_range}
   #thinned_points = points_for_range
   #cat("Loading environmental predictors...")
-  #cat("Creating background polygon...")
+  cat("Creating background polygon...")
   bg <- BgPolygon(thinned_points, buffer.polygon=c(5, 10))
   bg_chull <- Bg_cHull(thinned_points, width=2.5)
-  #if(nrow(thinned_points) < 3) { # If three or fewer valid points, the range will be retrieved from a circle around these points
   if(nrow(thinned_points) < 3) { # If two or fewer valid points, the range will be retrieved from a circle around these points
     list_of_model_results <- RangeFromFewPoints(thinned_points, predictors, buffer)
   } else {
-    #cat("Removing predictors with colinearity problems ...")
+    cat("Removing predictors with colinearity problems ...")
     predictors_final <- ColinearityTest(bg, predictors)
-    #cat("Performing species distribution modeling...")
+    cat("Performing species distribution modeling...")
     list_of_model_results <- RangeFromSDM_dismo(thinned_points, predictors_final, bg)
   }
-  #cat("Making models binary based on threshold...")
+  cat("Making models binary based on threshold...")
   fullresults <- RangeSize(list_of_model_results, threshold, bg_chull)
-  #cat("Adding alerts...")
+  cat("Adding alerts...")
   fullresults_w_alerts <- AddAlerts(fullresults, bg)
   return(fullresults_w_alerts)
 }
@@ -224,7 +223,7 @@ RangeFromFewPoints <- function(thinned_points, predictors, buffer) {
   species_name <- as.character(point[1,1])
   point[,1] <- 1
   sp::coordinates(point) <- ~ lon + lat
-  area_mask <- raster::raster(res=res(predictors))
+  area_mask <- raster::raster(res=raster::res(predictors))
   area_mask[] <- 1
   buffer_mask = buffer # Radius of the circle in kilometers
   circle_around_point <- dismo::circles(point, d=buffer_mask*1000, lonlat=TRUE)
