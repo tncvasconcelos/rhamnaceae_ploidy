@@ -69,10 +69,9 @@ GetOneRange <- function(points_for_range, threshold, buffer, res, predictors) {
   #thinned_points = points_for_range
   #cat("Loading environmental predictors...")
   #cat("Creating background polygon...")
-  bg <- Bg_cHull(thinned_points, width=2.5)
-  
+  bg <- BgPolygon(thinned_points, buffer.polygon=c(5, 10))
+  bg_chull <- Bg_cHull(thinned_points, width=2.5)
   #if(nrow(thinned_points) < 3) { # If three or fewer valid points, the range will be retrieved from a circle around these points
-  
   if(nrow(thinned_points) < 3) { # If two or fewer valid points, the range will be retrieved from a circle around these points
     list_of_model_results <- RangeFromFewPoints(thinned_points, predictors, buffer)
   } else {
@@ -82,7 +81,7 @@ GetOneRange <- function(points_for_range, threshold, buffer, res, predictors) {
     list_of_model_results <- RangeFromSDM_dismo(thinned_points, predictors_final, bg)
   }
   #cat("Making models binary based on threshold...")
-  fullresults <- RangeSize(list_of_model_results, threshold)
+  fullresults <- RangeSize(list_of_model_results, threshold, bg_chull)
   #cat("Adding alerts...")
   fullresults_w_alerts <- AddAlerts(fullresults, bg)
   return(fullresults_w_alerts)
@@ -255,6 +254,7 @@ RangeSize <- function (list_of_model_results, threshold) {
     model <- list_of_model_results$original_model
     model[model[] < threshold] <- NA
     model[!is.na(model)] <- 1
+    model <- raster::mask(layers[[1]], bg_chull)
     range_size <- round(sum(raster::area(model, na.rm=T)[], na.rm=T), 2)
     list_of_model_results[[6]] <- model
     list_of_model_results[[7]] <- paste(threshold)
