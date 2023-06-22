@@ -242,7 +242,7 @@ RangeFromFewPoints <- function(thinned_points, predictors, buffer) {
 #' @importFrom raster area
 #' @param list_of_model_results list_of_model_results
 #' @param threshold threshold
-RangeSize <- function (list_of_model_results, threshold) {
+RangeSize <- function (list_of_model_results, threshold, bg_chull) {
   if(length(list_of_model_results) == 3) {
     range_size <- round(sum(raster::area(list_of_model_results$range, na.rm=T)[], na.rm=T), 2)
     list_of_model_results[[4]] <- range_size
