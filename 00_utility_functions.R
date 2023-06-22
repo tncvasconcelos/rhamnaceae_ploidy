@@ -18,9 +18,10 @@ GetRanges <- function(points, species="species", lat="decimalLatitude", lon="dec
   colnames(tmp_points) <- c("species","lon","lat")
   spp <- unique(tmp_points[,1])
   list_of_ranges <- list()
+  predictors <- LoadWcLayers(res.layers=res)
   for(species_index in 1:length(spp)) {
     points_for_range <- tmp_points[tmp_points$species==spp[species_index],]
-    tmp_list <- try(GetOneRange(points_for_range, threshold, buffer, res))
+    tmp_list <- try(GetOneRange(points_for_range, threshold, buffer, res, predictors))
     if(exists("tmp_list")) {
       list_of_ranges[[species_index]] <- tmp_list
       names(list_of_ranges)[species_index] <- spp[species_index]
@@ -43,7 +44,7 @@ Bg_cHull <- function (thinned_points, width=2.5) {
   geo <- thinned_points
   sp::coordinates(geo) <- ~ lon + lat  
   x <- rgeos::gConvexHull(geo) 
-  buffer <- rgeos::gBuffer(x, width)
+  buffer <- rgeos::gBuffer(x, width, byid=F)
   return(buffer)
 }
 
@@ -60,16 +61,15 @@ Bg_cHull <- function (thinned_points, width=2.5) {
 #' @param threshold threshold
 #' @param buffer buffer
 #' @param res res
-GetOneRange <- function(points_for_range, threshold, buffer, res) {
+GetOneRange <- function(points_for_range, threshold, buffer, res, predictors) {
   #cat("Thinning points...")
-  # if(nrow(points_for_range) > 2) {
-  #   thinned_points <- Thinning_internal(points_for_range)
-  # } else { thinned_points = points_for_range}
-  thinned_points = points_for_range
+   if(nrow(points_for_range) > 2) {
+     thinned_points <- Thinning_internal(points_for_range)
+   } else { thinned_points = points_for_range}
+  #thinned_points = points_for_range
   #cat("Loading environmental predictors...")
-  predictors <- LoadWcLayers(res.layers=res)
   #cat("Creating background polygon...")
-  bg <- Bg_cHull(thinned_points)
+  bg <- Bg_cHull(thinned_points, width=2.5)
   
   #if(nrow(thinned_points) < 3) { # If three or fewer valid points, the range will be retrieved from a circle around these points
   
