@@ -228,8 +228,8 @@ RangeFromFewPoints <- function(thinned_points, predictors, buffer) {
   buffer_mask = buffer # Radius of the circle in kilometers
   circle_around_point <- dismo::circles(point, d=buffer_mask*1000, lonlat=TRUE)
   circle_around_point <- sp::polygons(circle_around_point)
-  area_mask <- crop(area_mask, circle_around_point)
-  area_mask <- mask(area_mask, circle_around_point)
+  area_mask <- raster::crop(area_mask, circle_around_point)
+  area_mask <- raster::mask(area_mask, circle_around_point)
   results <- list()
   results[[1]] <- paste0(species_name)
   results[[2]] <- area_mask
@@ -253,7 +253,7 @@ RangeSize <- function (list_of_model_results, threshold, bg_chull) {
     model <- list_of_model_results$original_model
     model[model[] < threshold] <- NA
     model[!is.na(model)] <- 1
-    model <- raster::mask(layers[[1]], bg_chull)
+    model <- raster::mask(model, bg_chull)
     range_size <- round(sum(raster::area(model, na.rm=T)[], na.rm=T), 2)
     list_of_model_results[[6]] <- model
     list_of_model_results[[7]] <- paste(threshold)
