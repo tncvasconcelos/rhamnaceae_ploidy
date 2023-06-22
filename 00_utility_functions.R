@@ -39,6 +39,13 @@ GetRanges <- function(points, species="species", lat="decimalLatitude", lon="dec
   return(list_of_ranges)
 }
 
+Bg_cHull <- function (thinned_points, width=2.5) {
+  geo <- thinned_points
+  coordinates(geo) <- ~ lon + lat  
+  x <- rgeos::gConvexHull(geo) 
+  buffer <- rgeos::gBuffer(x, width)
+  return(buffer)
+}
 
 #make.new.dir <- function(dir, namedir, overwrite.dir) {
 #  new.dir <- paste0(getwd(),"/", namedir)
@@ -62,7 +69,7 @@ GetOneRange <- function(points_for_range, threshold, buffer, res) {
   #cat("Loading environmental predictors...")
   predictors <- LoadWcLayers(res.layers=res)
   #cat("Creating background polygon...")
-  bg <- BgPolygon(thinned_points)
+  bg <- Bg_cHull(thinned_points)
   
   #if(nrow(thinned_points) < 3) { # If three or fewer valid points, the range will be retrieved from a circle around these points
   
