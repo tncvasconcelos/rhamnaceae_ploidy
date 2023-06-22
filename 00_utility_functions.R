@@ -69,7 +69,7 @@ GetOneRange <- function(points_for_range, threshold, buffer, res, predictors) {
   #thinned_points = points_for_range
   #cat("Loading environmental predictors...")
   cat("Creating background polygon...")
-  bg <- BgPolygon(thinned_points, buffer.polygon=c(5, 10))
+  bg <- BgPolygon(thinned_points)
   bg_chull <- Bg_cHull(thinned_points, width=2.5)
   if(nrow(thinned_points) < 3) { # If two or fewer valid points, the range will be retrieved from a circle around these points
     list_of_model_results <- RangeFromFewPoints(thinned_points, predictors, buffer)
@@ -268,10 +268,10 @@ RangeSize <- function (list_of_model_results, threshold) {
 #' @param thinned_points thinned_points
 #' @param buffer.polygon buffer.polygon
 BgPolygon <- function (thinned_points, buffer.polygon=c(5, 10)) {
-  max.lat <- ceiling(max(thinned_points[,3])) + buffer.polygon[1]
-  min.lat <- floor(min( thinned_points[,3])) - buffer.polygon[1]
-  max.lon <- ceiling(max(thinned_points[,2])) + buffer.polygon[2]
-  min.lon <- floor(min(thinned_points[,2])) - buffer.polygon[2]
+  max.lat <- ceiling(max(thinned_points[,"lat"])) + buffer.polygon[1]
+  min.lat <- floor(min( thinned_points[,"lat"])) - buffer.polygon[1]
+  max.lon <- ceiling(max(thinned_points[,"lon"])) + buffer.polygon[2]
+  min.lon <- floor(min(thinned_points[,"lon"])) - buffer.polygon[2]
   #if(max.lat > min.lat + 50 & max.lon > min.lon + 100){
   #  warning("Very wide background detected - this may not correspond to a natural distribution.")
   #}
