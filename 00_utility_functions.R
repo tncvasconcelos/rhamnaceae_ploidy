@@ -41,7 +41,7 @@ GetRanges <- function(points, species="species", lat="decimalLatitude", lon="dec
 
 Bg_cHull <- function (thinned_points, width=2.5) {
   geo <- thinned_points
-  coordinates(geo) <- ~ lon + lat  
+  sp::coordinates(geo) <- ~ lon + lat  
   x <- rgeos::gConvexHull(geo) 
   buffer <- rgeos::gBuffer(x, width)
   return(buffer)
