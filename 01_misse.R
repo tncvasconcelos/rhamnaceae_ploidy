@@ -1,17 +1,20 @@
-setwd("~/Desktop/rhamnaceae_ploidy/")
-rm(list=ls())
+#rm(list=ls())
+#setwd("~/Desktop/rhamnaceae_ploidy/")
 
 source("00_utility_functions.R")
 
-phy <- read.tree("01-Pomaderris-example-spatial/RHAM2.215t.TreePL.LABELED.tree")
-plot(phy, show.tip.label = F)
-f = 0.86 #?
-phy <- multi2di(phy)
+phy <- read.tree("RHAM2.215t.TreePL.LABELED.tree")
+#plot(phy, show.tip.label = F)
+f = 0.86 # sampling fraction
+phy <- multi2di(phy) # randomly solving polytomies before misse
 
 max.param = max(4, round(ape::Ntip(phy)/10))
 possible.combos = generateMiSSEGreedyCombinations(max.param=max.param, vary.both=TRUE, fixed.eps.tries=NA)
 
-save.file = "Pomaderris_run.Rsave"
+#------------------
+# running MiSSEGreedy 
+
+save.file = "Pomaderreae_run.Rsave"
 stop.deltaAICc = 2
 n.cores = 4
 chunk.size = 5
@@ -19,12 +22,11 @@ chunk.size = 5
 model.set = MiSSEGreedy(phy=phy, # the phylogeny 
                         f=f, # sampling fraction
                         possible.combos=possible.combos, # possible combinations of models
-                        save.file=save.file, # the name of the file to save
+                        save.file=paste0("misse_results/",save.file), # the name of the file to save
                         stop.deltaAICc=stop.deltaAICc, # the deltaAIC to stop running
                         n.cores=n.cores, # number of cores
                         chunk.size=chunk.size, # number of models to run at each time
-                        sann=FALSE) # IMPORTANT IMPORTANT IMPORTANT - This argument is here set to F for speed, 
-# but it should be set to TRUE for your actual runs. See above. 
+                        sann=T)
 
 model.set_pruned <- PruneRedundantModels(model.set)
 
@@ -39,7 +41,7 @@ for (model_index in 1:length(model.set_pruned)) {
 
 
 tip.rates <- GetModelAveRates(model.recons, type = "tips")
-write.csv(tip.rates, file="misse_results/Pomaderris_tip_rates.csv", row.names=F)
+write.csv(tip.rates, file="misse_results/Pomaderreae_tip_rates.csv", row.names=F)
 
 #########################################################################
 # Recommended to save all files:
@@ -47,7 +49,7 @@ save(model.set_pruned,
      model.recons, 
      tip.rates, 
      possible.combos,
-     file="misse_results/Pomaderris_results.Rsave")
+     file="misse_results/Pomaderreae_results.Rsave")
 
 #load("misse_results/Pomaderris_results.Rsave")
 #########################################################################
@@ -55,7 +57,7 @@ save(model.set_pruned,
 # though rates through time *should not* be interpreted literally. The painting
 # is just to get a "feeling" for the model.
 
-pdf("misse_results/Pomaderris_misse.pdf", width=6, height=15)
+pdf("misse_results/Pomaderreae_misse.pdf", width=6, height=15)
 rates <- c("net.div","speciation","turnover","extinction","extinction.fraction")
 for(rate_index in 1:length(rates)){
   painted.tree <- hisse::plot.misse.states(x = model.recons, 

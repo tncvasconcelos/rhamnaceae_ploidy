@@ -48,15 +48,6 @@ Bg_cHull <- function (thinned_points, width=2.5) {
   return(buffer)
 }
 
-#make.new.dir <- function(dir, namedir, overwrite.dir) {
-#  new.dir <- paste0(getwd(),"/", namedir)
-#  if (overwrite.dir) {
-#    unlink(new.dir, recursive=TRUE) # overwrites output directory
-#    dir.create(file.path(new.dir))
-#  } else { suppressWarnings(dir.create(new.dir)) }
-#  return(new.dir)
-#}
-
 #' @param points_for_range points_for_range
 #' @param threshold threshold
 #' @param buffer buffer
@@ -96,7 +87,7 @@ GetOneRange <- function(points_for_range, threshold, buffer, res, predictors) {
 #' @importFrom raster raster
 #' @param thinned_points thinned_points
 #' @param predictors_final predictors_final
-#' @param bg bg
+#' @param bg background shapefile
 RangeFromSDM_dismo <- function (thinned_points, predictors_final, bg) {
   points_for_sdm <- thinned_points[,c("lon","lat")]
   species_name <- as.character(thinned_points[1,1])
@@ -154,18 +145,6 @@ AddAlerts <- function(fullresults, bg) {
     return(fullresults)
   } else {
     alerts <- c()
-    #cross check with list of crops and invasive species
-    #crops <- readRDS("R/crops_taxized_gbif.Rdata")
-    #invasive <- readRDS("R/invasive_taxized_gbif.Rdata")
-    #if(fullresults$species_name %in% crops) {
-    #crop_alert <- "Crop alert: this species is listed as a crop at either fao.org, hort.purdue.edu/newcrop/ or Meyer et al. (2012)."
-    # Meyer, R. S., DuVal, A. E. & Jensen, H. R. Patterns and processes in crop domestication: an historical review and quantitative analysis of 203 global food crops. New Phytol. 196, 29–48 (2012).
-    # alerts <- c(alerts, crop_alert)
-    #}
-    #if(fullresults$species_name %in% invasive) {
-    #  invasive_alert <- "Invasive alert: this species is listed as invasive at GISD. Check www.iucngisd.org for more information."
-    #  alerts <- c(alerts, invasive_alert)
-    #}
     # is AUC very low?
     if(fullresults$auc < 0.75) {
       low_auc_alert <- "Alert of low AUC: model with AUC lower than 0.75."
@@ -295,7 +274,7 @@ BgPolygon <- function (thinned_points, buffer.polygon=c(5, 10)) {
   return(bg.area)
 }
 
-#' Internal function for now -- loads climatic layers from Worldclim
+#' Internal function -- loads climatic layers from Worldclim
 #' @importFrom raster getData
 #' @param res.layers res.layers
 LoadWcLayers <- function (res.layers) {
@@ -406,15 +385,7 @@ GetTraitDistribution <- function (list_of_ranges, trait_data, type=c("binary","c
   }
 }
 
-#remove_data_raster <- function(x) {
-#  x[x[]==0] <- NA
-#  x[!is.na(x)] <- 0
-#  x
-#}
-
-#range01 <- function(x){(x-min(x))/(max(x)-min(x))}
-
-#' A function to map distribution of traits
+#' A function to map residuals of regressions between two trait maps
 #' @param raster1 A raster of mapped trait distribution or species-richness
 #' @param raster2 A raster of mapped trait distribution or species-richness
 #' @return A raster with mapped residuals of a linear regression between raster1 and raster2
@@ -422,13 +393,8 @@ GetTraitDistribution <- function (list_of_ranges, trait_data, type=c("binary","c
 #' @importFrom stats lm na.exclude residuals.lm
 #' @export
 GetResDistribution <- function(raster1, raster2) {
-  #if(is.null(template.map)) {
-  template.map <- readRDS("R/template.map.Rdata")
-  #template.map <- raster::getData("worldclim", var="bio", download=TRUE, res=10)[[1]]
-  #template.map[!is.na(template.map)] <- 0
-  #} else { template.map=template.map }
-  template <- crop(template.map, raster::extent(-180, 180, -60, 90))
-  # set pallete
+  template.map <- readRDS("data/template.map.Rdata")
+  template <- crop(template.map, raster::extent(raster1))
   raster1[raster1[]==0] <- NA
   raster2[raster2[]==0] <- NA
   l.model <- stats::lm(raster::getValues(raster1) ~ raster::getValues(raster2), na.action = na.exclude)

@@ -1,9 +1,9 @@
-setwd("~/Desktop/rhamnaceae_ploidy/")
 #rm(list=ls())
+#setwd("~/Desktop/rhamnaceae_ploidy/")
 
 source("00_utility_functions.R")
 
-all_dist_points <- read.csv("02-RHAM-spatial-all/C-RHAM_GEO_ALL_2023-03-02-extra-col.csv")
+all_dist_points <- read.csv("C-RHAM_GEO_ALL_2023-03-02-extra-col.csv")
 
 all_dist_points <- subset(all_dist_points, !is.na(all_dist_points$Longitude))
 all_dist_points <- subset(all_dist_points, !is.na(all_dist_points$Latitude))
