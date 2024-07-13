@@ -6,7 +6,7 @@ library(raster)
 data("wrld_simpl")
 
 # Load models again
-test_run <- readRDS("distribution_models_50.Rdata")
+test_run <- readRDS("distribution_models_10th_percentile_thrhld.Rdata")
 
 #--------------------------
 # Removing models that didn't work
@@ -20,7 +20,7 @@ test_run[to_remove] <- NULL
 
 #--------------------------
 # Load tip rates
-tip_rates <- read.csv("misse_results/Pomaderris_tip_rates.csv")
+tip_rates <- read.csv("misse_results/Pomaderreae_tip_rates.csv")
 
 # Organize plot of species richness
 ranges <- unlist(lapply(test_run, "[[", "range"))
@@ -45,7 +45,7 @@ for (i in 1:length(ranges)) {
   print(i)
 }
 netdiv_map <- raster::calc(raster::stack(tmp.raster.list), mean) # calculate mean
-save(netdiv_map, file="netdiv_map.Rsave")
+saveRDS(netdiv_map, file="netdiv_map_10thpercentile.Rdata")
 
 
 ######

@@ -6,7 +6,7 @@ library(maptools)
 library(raster)
 data("wrld_simpl")
 
-test_run <- readRDS("distribution_models_50.Rdata")
+test_run <- readRDS("distribution_models_10th_percentile_thrhld.Rdata")
 
 #--------------------------
 # Removing models that didn't work
@@ -39,7 +39,7 @@ for (i in 1:length(ranges)) {
 # Sum of all layers (species richnes)
 names(tmp.raster.list) <- names(ranges)
 sprichness_map <- raster::calc(raster::stack(tmp.raster.list), sum)
-save(sprichness_map, file="species_richness_map.Rsave")
+saveRDS(sprichness_map, file="species_richness_map_10thpercentile.Rdata")
 
 # pdf("species_richness_map.pdf")
 # raster::plot(sprichness_map)
@@ -60,8 +60,8 @@ for (i in 1:length(ranges_woPomaderris)) {
 }
 names(tmp.raster.list) <- names(ranges_woPomaderris)
 sprichness_map <- raster::calc(raster::stack(tmp.raster.list), sum)
-saveRDS(sprichness_map, file="species_richness_map_woPomaderris.Rdata")
+saveRDS(sprichness_map, file="species_richness_map_woPomaderris_10thpercentile.Rdata")
 
-pdf("species_richness_map_woPomaderris.pdf")
+pdf("species_richness_map_woPomaderris_10thpercentile.pdf")
 raster::plot(sprichness_map)
 dev.off()

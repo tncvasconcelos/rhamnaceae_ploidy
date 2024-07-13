@@ -71,7 +71,7 @@ GetOneRange <- function(points_for_range, threshold, buffer, res, predictors) {
     list_of_model_results <- RangeFromSDM_dismo(thinned_points, predictors_final, bg)
   }
   cat("Making models binary based on threshold...")
-  fullresults <- RangeSize(list_of_model_results, threshold, bg_chull)
+  fullresults <- RangeSize(list_of_model_results,thinned_points, threshold, bg_chull)
   cat("Adding alerts...")
   fullresults_w_alerts <- AddAlerts(fullresults, bg)
   return(fullresults_w_alerts)
@@ -138,10 +138,10 @@ ColinearityTest <- function(bg, predictors) {
 #' @param fullresults fullresults
 #' @param bg bg
 AddAlerts <- function(fullresults, bg) {
-  if(length(fullresults)==5){
+  if(length(fullresults)==6){
     # is the number of good points three or less? (data deficiency alert)
-    fullresults[[6]] <- "Data deficiency alert: species with three or less valid points."
-    names(fullresults)[6] <- "alerts"
+    fullresults[[7]] <- "Data deficiency alert: species with three or less valid points."
+    names(fullresults)[7 ] <- "alerts"
     return(fullresults)
   } else {
     alerts <- c()
@@ -160,11 +160,11 @@ AddAlerts <- function(fullresults, bg) {
       alerts <- c(alerts, wide_range_alert)
     }
     if(is.null(alerts)) {
-      fullresults[[9]] <- "No alerts returned."
-      names(fullresults)[9] <- "alerts"
+      fullresults[[10]] <- "No alerts returned."
+      names(fullresults)[10] <- "alerts"
     } else {
-      fullresults[[9]] <- alerts
-      names(fullresults)[9] <- "alerts"
+      fullresults[[10]] <- alerts
+      names(fullresults)[10] <- "alerts"
     }
     return(fullresults)
   }
@@ -183,7 +183,7 @@ Thinning_internal <- function(points_for_range) {
   r0 <- raster::raster(coords)
   raster::res(r0) <- 1 # cell resolution
   r0 <- raster::extend(r0, raster::extent(r0) + 5) # expand the extent of the RasterLayer a little
-  thinned_points <- as.data.frame(dismo::gridSample(coords, r0, n = 1)) # n = maximum number of points per cell
+  thinned_points <- as.data.frame(dismo::gridSample(coords, r0, n = 3)) # n = maximum number of points per cell
   species <- points_for_range$species[sequence(nrow(thinned_points))]
   thinned_points <- cbind(species, thinned_points)
   return(thinned_points)
@@ -213,7 +213,8 @@ RangeFromFewPoints <- function(thinned_points, predictors, buffer) {
   results[[1]] <- paste0(species_name)
   results[[2]] <- area_mask
   results[[3]] <- "no AUC"
-  names(results) <- c("species_name","range","auc")
+  results[[4]] <- nrow(thinned_points)
+  names(results) <- c("species_name","range","auc","n_points")
   return(results)
 }
 
@@ -221,17 +222,24 @@ RangeFromFewPoints <- function(thinned_points, predictors, buffer) {
 #' @importFrom raster area
 #' @param list_of_model_results list_of_model_results
 #' @param threshold threshold
-RangeSize <- function (list_of_model_results, threshold, bg_chull) {
-  if(length(list_of_model_results) == 3) {
+RangeSize <- function (list_of_model_results, thinned_points, threshold, bg_chull) {
+  if(length(list_of_model_results) == 4) {
     range_size <- round(sum(raster::area(list_of_model_results$range, na.rm=T)[], na.rm=T), 2)
-    list_of_model_results[[4]] <- range_size
-    list_of_model_results[[5]] <- paste("Range estimated from three points or less.")
-    names(list_of_model_results)[c(4,5)] <- c("range_size", "note")
+    list_of_model_results[[5]] <- range_size
+    list_of_model_results[[6]] <- paste("Range estimated from three points or less.")
+    names(list_of_model_results)[c(5,6)] <- c("range_size", "note")
     return(list_of_model_results)
   } else {
     model <- list_of_model_results$original_model
     if(threshold=="") {
-      threshold <- quantile(model[], 0.9, na.rm=T) # 10% threshold
+      # Extract Suitability Values at Presence Points: Use your Maxent model to predict suitability values at the locations where the species is known to be present.
+      # Calculate the 10th Percentile: Determine the value below which 10% of these suitability values fall.
+      # Create a Binary Map: Use this threshold to classify the entire suitability map into suitable and unsuitable areas.
+      point <- thinned_points
+      point[,1] <- 1
+      sp::coordinates(point) <- ~ lon + lat
+      presence <- extract(model,point)
+      threshold <- round(quantile(presence, 0.1, na.rm=T),3) # 10% threshold
     } else {
       threshold <- threshold # user specified threshold
     }
@@ -242,7 +250,8 @@ RangeSize <- function (list_of_model_results, threshold, bg_chull) {
     list_of_model_results[[6]] <- model
     list_of_model_results[[7]] <- paste(threshold)
     list_of_model_results[[8]] <- range_size
-    names(list_of_model_results)[c(6,7,8)] <- c("range", "threshold","range_size")
+    list_of_model_results[[9]] <- nrow(thinned_points)
+    names(list_of_model_results)[c(6,7,8,9)] <- c("range", "threshold","range_size","n_points")
     return(list_of_model_results)
   }
 }
@@ -401,6 +410,7 @@ GetResDistribution <- function(raster1, raster2) {
   template.map <- readRDS("data/template.map.Rdata")
   template <- crop(template.map, raster::extent(raster1))
   raster1[raster1[]==0] <- NA
+  
   raster2[raster2[]==0] <- NA
   l.model <- stats::lm(raster::getValues(raster1) ~ raster::getValues(raster2), na.action = na.exclude)
   res.raster <- template
