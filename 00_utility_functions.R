@@ -128,7 +128,7 @@ RangeFromSDM_dismo <- function (thinned_points, predictors_final, bg) {
 #' @param predictors predictors
 ColinearityTest <- function(bg, predictors) {
   layers <- raster::crop(predictors, raster::extent(bg))
-  v0 <- suppressWarnings(usdm::vifcor(layers, th=0.8)) # stablished threshold
+  v0 <- suppressWarnings(usdm::vifcor(as.data.frame(layers), th=0.8)) # stablished threshold
   predictors_final <- usdm::exclude(layers, v0) # excludes variables that have collinearity problems
   predictors_final <- raster::stack(predictors_final)
   return(predictors_final)
@@ -230,6 +230,11 @@ RangeSize <- function (list_of_model_results, threshold, bg_chull) {
     return(list_of_model_results)
   } else {
     model <- list_of_model_results$original_model
+    if(threshold=="") {
+      threshold <- quantile(model[], 0.9, na.rm=T) # 10% threshold
+    } else {
+      threshold <- threshold # user specified threshold
+    }
     model[model[] < threshold] <- NA
     model[!is.na(model)] <- 1
     model <- raster::mask(model, bg_chull)
