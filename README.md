@@ -1,3 +1,5 @@
+Codes for some analyses in "Polyploidy linked with species richness but not diversification rates or niche breadth in Australian Pomaderreae (Rhamnaceae)"  https://doi.org/10.1093/aob/mcae181
+
 
 Description of folders: 
  
